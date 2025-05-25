@@ -15,9 +15,7 @@ class HomeView extends StatelessWidget {
       create: (context) => HomeViewModel(),
       builder: (context, _) {
         return BasePageView<HomeViewModel>(
-          appBar: AppBar(
-            title: const Text('Home View'),
-          ),
+          appBar: AppBar(title: const Text('Home View')),
           content: const _ViewContent(),
         );
       },
@@ -32,18 +30,14 @@ class _ViewContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Spacer(
-          flex: 8,
-        ),
+        const Spacer(flex: 8),
         Center(
           child: ElevatedButton(
             onPressed: context.read<HomeViewModel>().pushToDetailView,
-            child: const Text('Go to Detail View'),
+            child: Text("İzinleri Kontrol Et"),
           ),
         ),
-        const Spacer(
-          flex: 2,
-        ),
+        const Spacer(flex: 2),
       ],
     );
   }

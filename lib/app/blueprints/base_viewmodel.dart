@@ -1,26 +1,22 @@
 import 'package:auto_route/auto_route.dart';
 // ignore: depend_on_referenced_packages
-import 'package:dialog_service/dialog_service.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_manager/permission_manager.dart';
 
-import '../../services/api_service.dart';
 import '../../services/scaffold_messenger_services.dart';
 import '../app_config.dart';
 import '../locator/locator.dart';
 import 'api_response.dart';
 
 abstract class BaseViewModel extends ChangeNotifier {
-  //Api Service instance
-  @protected
-  final apiService = locator<ApiService>();
-
-  //Dialog Service instance
-  @protected
-  final dialogService = DialogService();
 
   //Scaffold Messenger instance
   @protected
   final messengerService = locator<ScaffoldMessengerService>();
+
+  //Permission Manager instance
+  @protected
+  final permissionManager = PermissionManager();
 
   //Context getter
   BuildContext get context => AppConfig.appRouter.navigatorKey.currentContext!;
