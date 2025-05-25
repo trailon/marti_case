@@ -34,12 +34,9 @@ dependencies:
 
   animations: ^2.0.3
 
-  image_provider:
+  permission_manager:
     git:
-      url: https://github.com/trailon/image_provider.git
-  focused_image_widget:
-    git:
-      url: https://github.com/CosmosExmo/focused_image_widget.git
+      url: "https://github.com/trailon/permission_manager.git"
   flutter_easyloading: ^3.0.5
   dio_cache_interceptor: ^4.0.3
   awesome_dio_interceptor: ^1.1.0

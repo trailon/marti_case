@@ -35,12 +35,6 @@ class _ViewContent extends StatelessWidget {
         const Spacer(
           flex: 8,
         ),
-        if (context.watch<DetailViewModel>().yesOrNoModel != null) ...[
-          Image.network(context.watch<DetailViewModel>().yesOrNoModel!.image!),
-          const Spacer(
-            flex: 8,
-          ),
-        ],
         Center(
           child: ElevatedButton(
             onPressed: context.read<DetailViewModel>().detailViewTrigger,
