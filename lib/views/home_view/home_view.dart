@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:marti_case/views/home_view/_partials/bg_fetch_switch.dart';
+import 'package:marti_case/views/home_view/_partials/flutter_map_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/blueprints/base_page_view.dart';
@@ -31,7 +32,9 @@ class _ViewContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Spacer(flex: 8),
+        FlutterMapWidget(
+          initialLocation: context.read<HomeViewModel>().currentLocation!,
+        ),
         Center(child: const BgFetchSwitch()),
         const Spacer(flex: 1),
       ],

@@ -11,22 +11,6 @@
 part of 'router.dart';
 
 /// generated route for
-/// [DetailView]
-class DetailViewRoute extends PageRouteInfo<void> {
-  const DetailViewRoute({List<PageRouteInfo>? children})
-    : super(DetailViewRoute.name, initialChildren: children);
-
-  static const String name = 'DetailViewRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const DetailView();
-    },
-  );
-}
-
-/// generated route for
 /// [HomeView]
 class HomeViewRoute extends PageRouteInfo<void> {
   const HomeViewRoute({List<PageRouteInfo>? children})
