@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_background_geolocation/flutter_background_geolocation.dart'
     as bg;
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../app/blueprints/base_viewmodel.dart';
 
@@ -9,7 +11,9 @@ class HomeViewModel extends BaseViewModel {
   String odometerKm = '0';
   bool isMoving = false;
   bool enabled = false;
-
+  bg.Location? currentLocation;
+  List<Marker> currentLocationMarkers = [];
+  MapController mapController = MapController();
   @override
   void disposeModel() {}
 
@@ -18,24 +22,35 @@ class HomeViewModel extends BaseViewModel {
 
   @override
   Future<void> getData() async {
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
+      await super.permissionManager.requestLocation();
+      initBgConfiguration();
+      currentLocation = await bg.BackgroundGeolocation.getCurrentPosition();
       setViewDidLoad(true);
     });
-    await super.permissionManager.requestLocation();
   }
 
   void _onLocation(bg.Location location) {
-    debugPrint('[location] - $location');
     odometerKm = (location.odometer / 1000.0).toStringAsFixed(1);
+    currentLocationMarkers.clear();
+    currentLocationMarkers.add(
+      Marker(
+        point: LatLng(location.coords.latitude, location.coords.longitude),
+        child: Icon(Icons.location_on, color: Colors.blue),
+      ),
+    );
+    if (enabled) {
+      mapController.move(
+        LatLng(location.coords.latitude, location.coords.longitude),
+        13,
+      );
+    }
+    notifyListeners();
   }
 
-  void _onLocationError(bg.LocationError error) {
-    debugPrint('[location] ERROR - $error');
-  }
+  void _onLocationError(bg.LocationError error) {}
 
-  void _onMotionChange(bg.Location location) {
-    debugPrint('[motionchange] - $location');
-  }
+  void _onMotionChange(bg.Location location) {}
 
   void _onProviderChange(bg.ProviderChangeEvent event) {
     debugPrint('$event');
@@ -68,13 +83,10 @@ class HomeViewModel extends BaseViewModel {
           ),
         )
         .then((bg.State state) {
-          debugPrint("[ready] ${state.toMap()}");
           enabled = state.enabled;
           isMoving = state.isMoving!;
         })
-        .catchError((error) {
-          debugPrint('[ready] ERROR: $error');
-        });
+        .catchError((error) {});
   }
 
   startStopBackgroundFetch(bool enable) {
@@ -85,6 +97,7 @@ class HomeViewModel extends BaseViewModel {
             debugPrint('[start] success $state');
             enabled = state.enabled;
             isMoving = state.isMoving!;
+            notifyListeners();
           })
           .catchError((error) {
             debugPrint('[start] ERROR: $error');
@@ -94,9 +107,8 @@ class HomeViewModel extends BaseViewModel {
         debugPrint('[stop] success: $state');
         enabled = state.enabled;
         isMoving = state.isMoving!;
+        notifyListeners();
       });
     }
-
-    notifyListeners();
   }
 }
