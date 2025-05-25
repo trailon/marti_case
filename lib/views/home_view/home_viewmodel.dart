@@ -1,18 +1,24 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_background_geolocation/flutter_background_geolocation.dart'
     as bg;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:marti_case/models/route_list_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/blueprints/base_viewmodel.dart';
+import '../../utils/pop_messager_mixin.dart';
 
-class HomeViewModel extends BaseViewModel {
-  String odometerKm = '0';
+class HomeViewModel extends BaseViewModel with PopMessagerMixin {
+  String metersInSecond = '0 m/s';
   bool isMoving = false;
   bool enabled = false;
   bg.Location? currentLocation;
   List<Marker> currentLocationMarkers = [];
+  List<Marker> markersForEvery100Meters = [];
   MapController mapController = MapController();
   @override
   void disposeModel() {}
@@ -25,32 +31,122 @@ class HomeViewModel extends BaseViewModel {
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
       await super.permissionManager.requestLocation();
       initBgConfiguration();
+      _fetchRouteList();
       currentLocation = await bg.BackgroundGeolocation.getCurrentPosition();
       setViewDidLoad(true);
     });
   }
 
+  void _fetchRouteList() async {
+    final prefs = await SharedPreferences.getInstance();
+    final routeListJson = prefs.getString('routeList');
+    if (routeListJson != null) {
+      final routeListModel = RouteListModel.fromJson(jsonDecode(routeListJson));
+      markersForEvery100Meters = routeListModel.markers!;
+      notifyListeners();
+    }
+  }
+
   void _onLocation(bg.Location location) {
-    odometerKm = (location.odometer / 1000.0).toStringAsFixed(1);
+    metersInSecond = '${location.coords.speed.toStringAsFixed(2)} m/s';
+    _updateCurrentLocationMarkers(location);
+    _updateMarkerListForEvery100Meters(location);
+    _saveCurrentRoute();
+    notifyListeners();
+  }
+
+  void _updateMarkerListForEvery100Meters(bg.Location location) {
+    if (markersForEvery100Meters.isEmpty) {
+      markersForEvery100Meters.add(
+        Marker(
+          point: LatLng(location.coords.latitude, location.coords.longitude),
+          child: Icon(Icons.location_on, color: Colors.red),
+        ),
+      );
+      notifyListeners();
+      return;
+    }
+    final lastMarker = markersForEvery100Meters.last;
+    final LatLng lastMarkerLatLng = LatLng(
+      lastMarker.point.latitude,
+      lastMarker.point.longitude,
+    );
+    final distanceFromLastMarker = Distance().as(
+      LengthUnit.Meter,
+      lastMarkerLatLng,
+      LatLng(location.coords.latitude, location.coords.longitude),
+    );
+    if (distanceFromLastMarker >= 100) {
+      markersForEvery100Meters.add(
+        Marker(
+          point: LatLng(location.coords.latitude, location.coords.longitude),
+          child: Icon(Icons.location_on, color: Colors.red),
+        ),
+      );
+      notifyListeners();
+    }
+  }
+
+  void _updateCurrentLocationMarkers(bg.Location location) {
     currentLocationMarkers.clear();
     currentLocationMarkers.add(
       Marker(
         point: LatLng(location.coords.latitude, location.coords.longitude),
-        child: Icon(Icons.location_on, color: Colors.blue),
+        child: Icon(Icons.location_on, color: Colors.blue, size: 20),
       ),
     );
-    if (enabled) {
+    if (enabled && super.viewDidLoad) {
       mapController.move(
         LatLng(location.coords.latitude, location.coords.longitude),
         13,
       );
     }
+  }
+
+  _saveCurrentRoute() async {
+    final routeListModel = RouteListModel(markers: markersForEvery100Meters);
+    final routeListJson = routeListModel.toJson();
+    final encoded = jsonEncode(routeListJson);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('routeList', encoded);
+  }
+
+  resetRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('routeList');
+    markersForEvery100Meters = [];
     notifyListeners();
   }
 
-  void _onLocationError(bg.LocationError error) {}
+  void _onLocationError(bg.LocationError error) {
+    switch (error.code) {
+      case 0:
+        showError('Location unknown');
+        break;
+      case 1:
+        showError('Location permission denied');
+        break;
+      case 2:
+        showError('Network error');
+        break;
+      case 3:
+        showError(
+          'Attempt to initiate location-services in background with WhenInUse authorization',
+        );
+        break;
+      case 408:
+        showError('Location timeout');
+        break;
+    }
+  }
 
-  void _onMotionChange(bg.Location location) {}
+  void _onMotionChange(bg.Location location) {
+    if (location.isMoving) {
+      showInfo('Moving');
+    } else {
+      showInfo('Stopped');
+    }
+  }
 
   void _onProviderChange(bg.ProviderChangeEvent event) {
     debugPrint('$event');
@@ -60,8 +156,6 @@ class HomeViewModel extends BaseViewModel {
     bg.BackgroundGeolocation.onLocation(_onLocation, _onLocationError);
     bg.BackgroundGeolocation.onMotionChange(_onMotionChange);
     bg.BackgroundGeolocation.onProviderChange(_onProviderChange);
-
-    // 2.  Configure the plugin
     bg.BackgroundGeolocation.ready(
           bg.Config(
             reset: true,
@@ -86,12 +180,14 @@ class HomeViewModel extends BaseViewModel {
           enabled = state.enabled;
           isMoving = state.isMoving!;
         })
-        .catchError((error) {});
+        .catchError((error) {
+          showError('Error initializing background geolocation: $error');
+        });
   }
 
   startStopBackgroundFetch(bool enable) {
     if (enable) {
-      // Reset odometer.
+      bg.BackgroundGeolocation.setOdometer(0);
       bg.BackgroundGeolocation.start()
           .then((bg.State state) {
             debugPrint('[start] success $state');

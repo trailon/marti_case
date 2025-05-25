@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:marti_case/views/home_view/_partials/bg_fetch_switch.dart';
 import 'package:marti_case/views/home_view/_partials/flutter_map_widget.dart';
+import 'package:marti_case/views/home_view/_partials/meters_in_second.dart';
+import 'package:marti_case/views/home_view/_partials/route_resetter.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/blueprints/base_page_view.dart';
@@ -17,7 +19,7 @@ class HomeView extends StatelessWidget {
       create: (context) => HomeViewModel(),
       builder: (context, _) {
         return BasePageView<HomeViewModel>(
-          appBar: AppBar(title: const Text('Home View')),
+          appBar: AppBar(title: const Text('Map View')),
           content: const _ViewContent(),
         );
       },
@@ -36,6 +38,8 @@ class _ViewContent extends StatelessWidget {
           initialLocation: context.read<HomeViewModel>().currentLocation!,
         ),
         Center(child: const BgFetchSwitch()),
+        const RouteResetter(),
+        const MetersInSecond(),
         const Spacer(flex: 1),
       ],
     );

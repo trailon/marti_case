@@ -38,6 +38,14 @@ class FlutterMapWidget extends StatelessWidget {
           ),
           Selector<HomeViewModel, List<Marker>>(
             selector: (context, value) {
+              return context.read<HomeViewModel>().markersForEvery100Meters;
+            },
+            builder: (context, value, child) {
+              return MarkerLayer(markers: value);
+            },
+          ),
+          Selector<HomeViewModel, List<Marker>>(
+            selector: (context, value) {
               return context.read<HomeViewModel>().currentLocationMarkers;
             },
             builder: (context, value, child) {
