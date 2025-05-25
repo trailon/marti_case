@@ -19,9 +19,6 @@ dependencies:
 
   bubble: ^1.2.1
 
-  # Network
-  dio: ^5.3.3
-
   # State Management
   provider: ^6.0.5
 
@@ -31,9 +28,8 @@ dependencies:
   get: ^4.6.1
   get_it: ^8.0.2
   injectable: ^2.3.2
-
   animations: ^2.0.3
-
+  flutter_background_geolocation: ^4.16.10
   permission_manager:
     git:
       url: "https://github.com/trailon/permission_manager.git"
@@ -64,7 +60,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  assets:
-    - assets/animations/
 flutter_intl:
   enabled: true
