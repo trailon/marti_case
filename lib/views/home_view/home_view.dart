@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:marti_case/views/home_view/_partials/bg_fetch_switch.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/blueprints/base_page_view.dart';
@@ -31,13 +32,8 @@ class _ViewContent extends StatelessWidget {
     return Column(
       children: [
         const Spacer(flex: 8),
-        Center(
-          child: ElevatedButton(
-            onPressed: context.read<HomeViewModel>().pushToDetailView,
-            child: Text("İzinleri Kontrol Et"),
-          ),
-        ),
-        const Spacer(flex: 2),
+        Center(child: const BgFetchSwitch()),
+        const Spacer(flex: 1),
       ],
     );
   }
