@@ -10,7 +10,7 @@ class RouteResetter extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShadButton.destructive(
       onPressed: context.read<HomeViewModel>().resetRoute,
-      child: Text("Reset Route"),
+      child: Text("Rotayı Sıfırla"),
     );
   }
 }

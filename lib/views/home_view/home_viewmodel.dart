@@ -7,19 +7,24 @@ import 'package:flutter_background_geolocation/flutter_background_geolocation.da
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:marti_case/models/route_list_model.dart';
+import 'package:marti_case/utils/geolocation_mixin.dart';
+import 'package:marti_case/views/home_view/_partials/marker_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/blueprints/base_viewmodel.dart';
 import '../../utils/pop_messager_mixin.dart';
 
-class HomeViewModel extends BaseViewModel with PopMessagerMixin {
+class HomeViewModel extends BaseViewModel
+    with PopMessagerMixin, GeolocationMixin {
   String metersInSecond = '0 m/s';
   bool isMoving = false;
   bool enabled = false;
+  bool showPolyline = false;
   bg.Location? currentLocation;
   List<Marker> currentLocationMarkers = [];
-  List<Marker> markersForEvery100Meters = [];
+  late List<Marker> markersForEvery100Meters;
   MapController mapController = MapController();
+  Polyline polyline = Polyline(points: []);
   @override
   void disposeModel() {}
 
@@ -29,22 +34,25 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
   @override
   Future<void> getData() async {
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
-      await super.permissionManager.requestLocation();
-      initBgConfiguration();
-      _fetchRouteList();
+      await _fetchRouteList();
+      await initBgConfiguration();
       currentLocation = await bg.BackgroundGeolocation.getCurrentPosition();
       setViewDidLoad(true);
     });
   }
 
-  void _fetchRouteList() async {
+  Future<void> _fetchRouteList() async {
     final prefs = await SharedPreferences.getInstance();
     final routeListJson = prefs.getString('routeList');
     if (routeListJson != null) {
       final routeListModel = RouteListModel.fromJson(jsonDecode(routeListJson));
       markersForEvery100Meters = routeListModel.markers!;
+      _updatePolyline();
       notifyListeners();
+      return;
     }
+    markersForEvery100Meters = [];
+    notifyListeners();
   }
 
   void _onLocation(bg.Location location) {
@@ -52,6 +60,7 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
     _updateCurrentLocationMarkers(location);
     _updateMarkerListForEvery100Meters(location);
     _saveCurrentRoute();
+    _updatePolyline();
     notifyListeners();
   }
 
@@ -59,8 +68,16 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
     if (markersForEvery100Meters.isEmpty) {
       markersForEvery100Meters.add(
         Marker(
+          width: 100,
+          height: 36,
           point: LatLng(location.coords.latitude, location.coords.longitude),
-          child: Icon(Icons.location_on, color: Colors.red),
+          child: MarkerChild(
+            key: ObjectKey(location.coords.latitude),
+            location: LatLng(
+              location.coords.latitude,
+              location.coords.longitude,
+            ),
+          ),
         ),
       );
       notifyListeners();
@@ -79,12 +96,37 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
     if (distanceFromLastMarker >= 100) {
       markersForEvery100Meters.add(
         Marker(
+          width: 100,
+          height: 36,
           point: LatLng(location.coords.latitude, location.coords.longitude),
-          child: Icon(Icons.location_on, color: Colors.red),
+          child: MarkerChild(
+            key: ObjectKey(location.coords.latitude),
+            location: LatLng(
+              location.coords.latitude,
+              location.coords.longitude,
+            ),
+          ),
         ),
       );
       notifyListeners();
     }
+  }
+
+  void _updatePolyline() {
+    polyline = Polyline(
+      color: Colors.red,
+      points: markersForEvery100Meters
+          .map(
+            (marker) => LatLng(marker.point.latitude, marker.point.longitude),
+          )
+          .toList(),
+    );
+    notifyListeners();
+  }
+
+  void togglePolyline(bool? value) {
+    showPolyline = value ?? false;
+    notifyListeners();
   }
 
   void _updateCurrentLocationMarkers(bg.Location location) {
@@ -98,7 +140,7 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
     if (enabled && super.viewDidLoad) {
       mapController.move(
         LatLng(location.coords.latitude, location.coords.longitude),
-        13,
+        15,
       );
     }
   }
@@ -113,6 +155,7 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
 
   resetRoute() async {
     final prefs = await SharedPreferences.getInstance();
+    polyline = Polyline(points: [currentLocationMarkers.first.point]);
     await prefs.remove('routeList');
     markersForEvery100Meters = [];
     notifyListeners();
@@ -152,11 +195,11 @@ class HomeViewModel extends BaseViewModel with PopMessagerMixin {
     debugPrint('$event');
   }
 
-  initBgConfiguration() {
+  Future<void> initBgConfiguration() async {
     bg.BackgroundGeolocation.onLocation(_onLocation, _onLocationError);
     bg.BackgroundGeolocation.onMotionChange(_onMotionChange);
     bg.BackgroundGeolocation.onProviderChange(_onProviderChange);
-    bg.BackgroundGeolocation.ready(
+    await bg.BackgroundGeolocation.ready(
           bg.Config(
             reset: true,
             debug: true,

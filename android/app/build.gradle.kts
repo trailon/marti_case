@@ -11,7 +11,7 @@ apply { from("${backgroundGeolocation.projectDir}/background_geolocation.gradle"
 android {
     namespace = "com.example.marti_case"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
