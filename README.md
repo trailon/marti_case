@@ -100,3 +100,12 @@ assets/
 
 [Veli Kaan Çetinel]
 Bu proje, Martı Technologies başvuru süreci kapsamında hazırlanmıştır.
+```
+---
+
+## 🗺️ Harita Katmanı (Tile Layer) Kaynağı
+
+Bu projede kullanılan harita altyapısı:
+
+- **Basemap:** © [Carto](https://carto.com/)
+- **Veri Sağlayıcısı:** © [OpenStreetMap](https://www.openstreetmap.org/copyright) katkıcıları
