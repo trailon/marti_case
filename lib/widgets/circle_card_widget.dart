@@ -18,9 +18,6 @@ class CircleCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    /* final allDone =
-        context.select<DoneNotifier, bool>((value) => value.isAllDone); */
-
     return Stack(
       children: [
         child!,
@@ -115,104 +112,5 @@ class _CardContentsState extends State<_CardContents>
       ),
       child: const CustomCircularProgressIndicator(),
     );
-
-    /* return Column(
-      children: [
-        ScaleTransition(
-          scale: CurvedAnimation(
-            curve: Interval(
-              0.2,
-              0.6,
-              curve: Curves.elasticOut,
-            ),
-            parent: _controller,
-          ),
-          child: CustomCircularProgressIndicator(),
-        ),
-        SizedBox(height: 20),
-        Text(
-          'Congratulations!',
-          style: theme.textTheme.headline1.copyWith(fontSize: 30),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 30),
-          child: TrackedOutText(
-            'You have successfully completed watching this talk. '
-            'You get 50 completely meaningless virtual points!',
-            CurvedAnimation(
-              curve: Interval(0.45, 0.7),
-              parent: _controller,
-            ),
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyText2.copyWith(
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ],
-    ); */
   }
 }
-
-/* class TrackedOutText extends StatefulWidget {
-  final String text;
-
-  final List<TextSpan> _slices;
-  final List<TextSpan> _slicesTransparent;
-
-  final Animation<double> progress;
-
-  final TextAlign textAlign;
-  final TextStyle style;
-
-  TrackedOutText(
-    this.text,
-    this.progress, {
-    this.textAlign,
-    this.style,
-  })  : _slices = _generateSlices(text, style, false).toList(growable: false),
-        _slicesTransparent =
-            _generateSlices(text, style, true).toList(growable: false);
-
-  static Iterable<TextSpan> _generateSlices(
-      String text, TextStyle style, bool transparent) sync* {
-    const step = 3;
-    var i = 0;
-    for (; i < text.length - step; i += step) {
-      yield TextSpan(
-        text: text.substring(i, i + step),
-        style: transparent ? style.apply(color: Colors.transparent) : null,
-      );
-    }
-    yield TextSpan(
-      text: text.substring(i),
-      style: transparent ? style.apply(color: Colors.transparent) : null,
-    );
-  }
-
-  @override
-  _TrackedOutTextState createState() => _TrackedOutTextState();
-}
-
-class _TrackedOutTextState extends State<TrackedOutText> {
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.progress,
-      builder: (BuildContext context, Widget child) {
-        return Text.rich(
-          TextSpan(
-            children: [
-              for (var i = 0; i < widget._slices.length; i++)
-                (i / widget._slices.length < widget.progress.value)
-                    ? widget._slices[i]
-                    : widget._slicesTransparent[i],
-            ],
-          ),
-          textAlign: widget.textAlign,
-          style: widget.style,
-        );
-      },
-    );
-  }
-} */
