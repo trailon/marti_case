@@ -33,19 +33,32 @@ class _ViewContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Stack(
       children: [
-        FlutterMapWidget(
-          initialLocation: context.read<HomeViewModel>().currentLocation!,
+        Expanded(
+          child: FlutterMapWidget(
+            initialLocation: context.read<HomeViewModel>().currentLocation!,
+          ),
         ),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [BgFetchSwitch(), ToggleShowPolyline()],
+        Positioned(
+          bottom: -10,
+          left: -10,
+          right: -10,
+          child: Card(
+            margin: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [BgFetchSwitch(), ToggleShowPolyline()],
+                ),
+                const RouteResetter(),
+                const MetersInSecond(),
+                SizedBox(height: 40),
+              ],
+            ),
+          ),
         ),
-        const RouteResetter(),
-        const MetersInSecond(),
-        const Spacer(flex: 1),
       ],
     );
   }
