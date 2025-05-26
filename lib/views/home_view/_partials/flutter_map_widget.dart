@@ -22,12 +22,6 @@ class FlutterMapWidget extends StatelessWidget {
             initialLocation.coords.longitude,
           ),
           initialZoom: 13,
-          onTap: (_, p) {
-            debugPrint('onTap: $p');
-          },
-          interactionOptions: const InteractionOptions(
-            flags: ~InteractiveFlag.doubleTapZoom,
-          ),
         ),
         children: [
           TileLayer(
@@ -35,6 +29,22 @@ class FlutterMapWidget extends StatelessWidget {
                 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.example.marti_case',
             tileProvider: CancellableNetworkTileProvider(),
+          ),
+          Selector<HomeViewModel, bool>(
+            selector: (context, value) =>
+                context.read<HomeViewModel>().showPolyline,
+            builder: (context, value, child) {
+              if (!value) {
+                return const SizedBox.shrink();
+              }
+              return Selector<HomeViewModel, Polyline>(
+                selector: (context, value) =>
+                    context.read<HomeViewModel>().polyline,
+                builder: (context, value, child) {
+                  return PolylineLayer(polylines: [value]);
+                },
+              );
+            },
           ),
           Selector<HomeViewModel, List<Marker>>(
             selector: (context, value) {

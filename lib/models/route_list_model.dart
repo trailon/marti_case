@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:marti_case/utils/geolocation_mixin.dart';
+import 'package:marti_case/views/home_view/_partials/marker_child_widget.dart';
 
-class RouteListModel {
+class RouteListModel with GeolocationMixin {
   List<Marker>? markers;
 
   RouteListModel({this.markers});
@@ -13,8 +14,10 @@ class RouteListModel {
       json['markers'].forEach((v) {
         markers!.add(
           Marker(
-            point: LatLng(v['coordinates'][0], v['coordinates'][1]),
-            child: Icon(Icons.location_on, color: Colors.red),
+            point: LatLng(v['coordinates'][1], v['coordinates'][0]),
+            child: MarkerChild(
+              location: LatLng(v['coordinates'][1], v['coordinates'][0]),
+            ),
           ),
         );
       });
