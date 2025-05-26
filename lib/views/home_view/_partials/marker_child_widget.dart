@@ -35,6 +35,7 @@ class _MarkerChildState extends State<MarkerChild> with GeolocationMixin {
                   right: 0,
                   bottom: 24,
                   child: Card(
+                    color: Colors.blueGrey.shade900,
                     elevation: 10,
                     margin: EdgeInsets.all(0),
                     shape: RoundedRectangleBorder(

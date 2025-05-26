@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_background_geolocation/flutter_background_geolocation.dart'
     as bg;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:marti_case/app/app_defaults.dart';
 import 'package:marti_case/models/route_list_model.dart';
 import 'package:marti_case/utils/geolocation_mixin.dart';
 import 'package:marti_case/views/home_view/_partials/marker_child_widget.dart';
@@ -20,6 +23,7 @@ class HomeViewModel extends BaseViewModel
   bool isMoving = false;
   bool enabled = false;
   bool showPolyline = false;
+  bool isUsingGPXfile = false;
   bg.Location? currentLocation;
   List<Marker> currentLocationMarkers = [];
   late List<Marker> markersForEvery100Meters;
@@ -34,11 +38,23 @@ class HomeViewModel extends BaseViewModel
   @override
   Future<void> getData() async {
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
+      await _forceMovingToTrueIfAndroidEmulatorAndUsingGPXorKMLfile();
       await _fetchRouteList();
       await initBgConfiguration();
       currentLocation = await bg.BackgroundGeolocation.getCurrentPosition();
       setViewDidLoad(true);
     });
+  }
+
+  Future<void> _forceMovingToTrueIfAndroidEmulatorAndUsingGPXorKMLfile() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    if (Platform.isAndroid && !androidInfo.isPhysicalDevice) {
+      final askIfUsingGPXfile = await askForGPXorKMLfile();
+      if (askIfUsingGPXfile == true) {
+        isUsingGPXfile = true;
+      }
+    }
   }
 
   Future<void> _fetchRouteList() async {
@@ -68,8 +84,8 @@ class HomeViewModel extends BaseViewModel
     if (markersForEvery100Meters.isEmpty) {
       markersForEvery100Meters.add(
         Marker(
-          width: 100,
-          height: 36,
+          width: AppDefaults.kMarkerWidth,
+          height: AppDefaults.kMarkerHeight,
           point: LatLng(location.coords.latitude, location.coords.longitude),
           child: MarkerChild(
             key: ObjectKey(location.coords.latitude),
@@ -93,11 +109,11 @@ class HomeViewModel extends BaseViewModel
       lastMarkerLatLng,
       LatLng(location.coords.latitude, location.coords.longitude),
     );
-    if (distanceFromLastMarker >= 100) {
+    if (distanceFromLastMarker >= AppDefaults.distanceFromLastMarker) {
       markersForEvery100Meters.add(
         Marker(
-          width: 100,
-          height: 36,
+          width: AppDefaults.kMarkerWidth,
+          height: AppDefaults.kMarkerHeight,
           point: LatLng(location.coords.latitude, location.coords.longitude),
           child: MarkerChild(
             key: ObjectKey(location.coords.latitude),
@@ -134,7 +150,7 @@ class HomeViewModel extends BaseViewModel
     currentLocationMarkers.add(
       Marker(
         point: LatLng(location.coords.latitude, location.coords.longitude),
-        child: Icon(Icons.location_on, color: Colors.blue, size: 20),
+        child: Icon(Icons.location_on, color: Colors.blue, size: AppDefaults.currentLocationMarkerSize),
       ),
     );
     if (enabled && super.viewDidLoad) {
@@ -191,14 +207,9 @@ class HomeViewModel extends BaseViewModel
     }
   }
 
-  void _onProviderChange(bg.ProviderChangeEvent event) {
-    debugPrint('$event');
-  }
-
   Future<void> initBgConfiguration() async {
     bg.BackgroundGeolocation.onLocation(_onLocation, _onLocationError);
     bg.BackgroundGeolocation.onMotionChange(_onMotionChange);
-    bg.BackgroundGeolocation.onProviderChange(_onProviderChange);
     await bg.BackgroundGeolocation.ready(
           bg.Config(
             reset: true,
@@ -222,6 +233,10 @@ class HomeViewModel extends BaseViewModel
         .then((bg.State state) {
           enabled = state.enabled;
           isMoving = state.isMoving!;
+          if (!state.isMoving! && isUsingGPXfile) {
+            bg.BackgroundGeolocation.changePace(true);
+            isMoving = true;
+          }
         })
         .catchError((error) {
           showError('Error initializing background geolocation: $error');

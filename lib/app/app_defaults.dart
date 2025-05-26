@@ -45,4 +45,9 @@ class AppDefaults {
   static const kSandartTurkishCarChassisNumberLenght = 17;
   static final kIsPhone = Platform.isIOS || Platform.isAndroid;
   static const double bottomSheetAnimationHeigt = 450;
+  static const double kMarkerWidth = 100;
+  static const double kMarkerHeight = 36;
+  static const double distanceFromLastMarker = 100;
+  static const double currentLocationMarkerSize = 20;
+  
 }
